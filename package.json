@@ -1,0 +1,17 @@
+{
+  "name": "vons-coupon-clicker",
+  "version": "1.0.0",
+  "description": "Clicks all coupons for Vons.com",
+  "main": "index.js",
+  "scripts": {
+    "start": "taiko index.js",
+    "watch": "taiko index.js --observe"
+  },
+  "git": "https://github.com/jaredkotoff/vons-coupon-clicker.git",
+  "author": "Jared Kotoff",
+  "license": "ISC",
+  "dependencies": {
+    "chai": "^4.2.0",
+    "taiko": "^1.0.4"
+  }
+}
