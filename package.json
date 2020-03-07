@@ -11,7 +11,6 @@
   "author": "Jared Kotoff",
   "license": "ISC",
   "dependencies": {
-    "chai": "^4.2.0",
     "taiko": "^1.0.4"
   }
 }

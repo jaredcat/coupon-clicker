@@ -8,7 +8,6 @@ const {
   button,
   closeBrowser,
 } = require('taiko');
-expect = require('chai').expect;
 const site = 'Target';
 
 module.exports = async (email, password) => {
@@ -34,13 +33,20 @@ module.exports = async (email, password) => {
       await write(email, into(textBox('Email')));
       await write(password, into(textBox('Password')));
       await click($('#login'));
-      expect(await text("can't find your account").exists(), 'invalidLogin').to
-        .be.false;
-      expect(await text('something went wrong').exists(), 'invalidLogin').to.be
-        .false;
+
+      const invalidLogin = await Promise.race([
+        text("can't find your account").exists(),
+        text('something went wrong').exists(),
+      ]);
+      if (invalidLogin) throw new Error('invalidLogin');
+
       await goto('https://www.target.com/offers/target-circle', {
         waitForEvents: ['firstMeaningfulPaint'],
       });
+      await click(button('sort'));
+      await waitFor(1000);
+      await click('Trending');
+      await waitFor(1000);
       let couponsClicked = 0;
       let loadMore = true;
       while (loadMore) {
@@ -54,6 +60,12 @@ module.exports = async (email, password) => {
             } catch (err) {
               moreCoupons = false;
             }
+          }
+          if ($('div[data-test=popover]').exists()) {
+            console.log(
+              'Your list is full. Check back later afer you used some offer or after offers expire',
+            );
+            throw new Error('full');
           }
           console.log('Loading more coupons...');
           await click(button('Load'));

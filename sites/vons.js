@@ -8,7 +8,6 @@ const {
   button,
   closeBrowser,
 } = require('taiko');
-expect = require('chai').expect;
 const site = 'Vons';
 
 module.exports = async (email, password) => {
@@ -30,7 +29,7 @@ module.exports = async (email, password) => {
       await write(password, into(textBox(below('Password'))));
       await click($('#btnSignIn'));
       await waitFor(5000);
-      expect(await $('#error-message').exists(), 'invalidLogin').to.be.false;
+      if (await $('#error-message').exists()) throw new Error('invalidLogin');
       click($('.create-modal-close-icon'));
       await waitFor(2000);
       let couponsClicked = 0;

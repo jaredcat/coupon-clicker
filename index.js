@@ -8,7 +8,7 @@ try {
   return;
 }
 const { vons, target } = config;
-if (!vons || !target) {
+if (!vons && !target) {
   console.error('No sites added to config.json!');
   return;
 }
