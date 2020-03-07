@@ -1,14 +1,5 @@
-const {
-  openBrowser,
-  goto,
-  click,
-  below,
-  textBox,
-  write,
-  button,
-  closeBrowser,
-} = require('taiko');
-expect = require('chai').expect;
+const sites = require('./sites');
+
 let config = null;
 try {
   config = require('./config.json');
@@ -16,55 +7,25 @@ try {
   console.error('No config.json found!');
   return;
 }
-const { email, password } = config;
-if (!email) {
-  console.error('No username found!');
-  return;
-} else if (!password) {
-  console.error('No password found!');
+const { vons, target } = config;
+if (!vons || !target) {
+  console.error('No sites added to config.json!');
   return;
 }
 
-(async () => {
-  try {
-    await openBrowser();
-    await goto(
-      'https://www.vons.com/account/sign-in.html?r=https%3A%2F%2Fwww.vons.com%2Fjustforu%2Fcoupons-deals.html&goto=/justforu/coupons-deals.html',
-    );
-    await write(email, into(textBox(below('Email'))));
-    await write(password, into(textBox(below('Password'))));
-    await click($('#btnSignIn'));
-    await waitFor(5000);
-    expect(await $('#error-message').exists(), 'invalidLogin').to.be.false;
-    click($('.create-modal-close-icon'));
-    await waitFor(2000);
-    console.log('Loading all coupons...');
-    let loadMore = true;
-    while (loadMore) {
-      try {
-        await click(button('Load more'));
-      } catch (err) {
-        console.log('Done loading all coupons!');
-        loadMore = false;
-      }
-    }
-    console.log('Clicking all coupons...');
-    let moreCoupons = true;
-    while (moreCoupons) {
-      try {
-        await click(button('Add'));
-      } catch (err) {
-        console.log('No more coupons!');
-        moreCoupons = false;
-      }
-    }
-  } catch (error) {
-    if (error.message.startsWith('invalidLogin')) {
-      console.error('Invalid email or password');
-    } else {
-      console.error(error);
-    }
-  } finally {
-    await closeBrowser();
+const main = async () => {
+  if (vons) {
+    console.log('\n\n*****START: VONS.COM*******');
+    await sites.vons(vons.email, vons.password);
+    console.log('\n*****END: VONS.COM*******');
   }
-})();
+  if (target) {
+    console.log('\n\n*****TARGET.COM*******');
+    console.log(
+      "Target currently doesn't work in headless mode, will open a browser window",
+    );
+    await sites.target(target.email, target.password);
+    console.log('\n*****END: TARGET.COM*******');
+  }
+};
+main();
