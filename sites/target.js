@@ -56,16 +56,17 @@ module.exports = async (email, password) => {
           while (moreCoupons) {
             try {
               await click('Save offer');
+              if ($('div[data-test=popover]').exists()) {
+                console.log(
+                  'Your list is full. Check back later afer you used some offer or after offers expire',
+                );
+                loadMore = false;
+                throw new Error('full');
+              }
               couponsClicked++;
             } catch (err) {
               moreCoupons = false;
             }
-          }
-          if ($('div[data-test=popover]').exists()) {
-            console.log(
-              'Your list is full. Check back later afer you used some offer or after offers expire',
-            );
-            throw new Error('full');
           }
           console.log('Loading more coupons...');
           await click(button('Load'));
