@@ -1,10 +1,14 @@
 {
-  "vons": {
-    "email": "",
-    "password": ""
-  },
-  "target": {
-    "email": "",
-    "password": ""
-  }
+  "vons": [
+    {
+      "email": "",
+      "password": ""
+    }
+  ],
+  "target": [
+    {
+      "email": "",
+      "password": ""
+    }
+  ]
 }
