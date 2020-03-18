@@ -1,4 +1,4 @@
-# Vons Coupon Clicker
+# Coupon Clicker
 
 _Clicks all the coupons for Vons.com & Target.com automatically!_
 
