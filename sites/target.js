@@ -2,7 +2,6 @@ const {
   openBrowser,
   goto,
   click,
-  below,
   textBox,
   write,
   button,
@@ -56,9 +55,9 @@ module.exports = async (email, password) => {
           while (moreCoupons) {
             try {
               await click("Save offer");
-              if ($("div[data-test=popover]").exists()) {
+              if (await $("div[data-test=popover]").exists()) {
                 console.log(
-                  "Your list is full. Check back later afer you used some offer or after offers expire",
+                  "Your list is full. Check back later after you used some offer or after offers expire",
                 );
                 loadMore = false;
                 throw new Error("full");
