@@ -11,6 +11,9 @@
   "author": "Jared Kotoff",
   "license": "ISC",
   "dependencies": {
-    "taiko": "^1.2.5"
+    "taiko": "^1.2.8"
+  },
+  "devDependencies": {
+    "eslint": "^8.5.0"
   }
 }
