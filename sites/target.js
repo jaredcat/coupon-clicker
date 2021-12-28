@@ -7,6 +7,7 @@ const {
   button,
   closeBrowser,
   setConfig,
+  reload,
 } = require('taiko');
 const site = 'Target';
 
@@ -34,10 +35,13 @@ module.exports = async (email, password) => {
         },
       });
       await click('Sign in');
-      await waitFor(3000);
+      await waitFor(1000);
       await click($('#accountNav-signIn'));
-      await write(email, into(textBox('Email')));
-      await write(password, into(textBox('Password')));
+      await waitFor(3000);
+      await write(email, into(textBox('Email')), { waitForNavigation: false });
+      await write(password, into(textBox('Password')), {
+        waitForNavigation: false,
+      });
       await click($('#login'));
 
       const invalidLogin = await Promise.race([
@@ -49,10 +53,11 @@ module.exports = async (email, password) => {
       await goto('https://www.target.com/offers/target-circle', {
         waitForEvents: ['firstMeaningfulPaint'],
       });
-      await click(button('sort'));
+      await waitFor(5000);
+      await click(button({ id: 'sort-bar' }), { waitForNavigation: false });
       await waitFor(1000);
-      await click('Trending');
-      await waitFor(1000);
+      await click('Discount');
+      await waitFor(2000);
       let couponsClicked = 0;
       let loadMore = true;
       while (loadMore) {

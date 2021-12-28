@@ -40,6 +40,8 @@ module.exports = async (email, password) => {
           while (moreCoupons) {
             try {
               await click(button('Clip Coupon'));
+              const randomClickTime = Math.random() * (1250 - 250) + 250;
+              await waitFor(randomClickTime);
               couponsClicked++;
             } catch (err) {
               moreCoupons = false;
