@@ -7,32 +7,29 @@ try {
   console.error('No config.json found!');
   return;
 }
-const { vons, target } = config;
-if (!(vons && vons.length) && !(target && target.length)) {
-  console.error('No sites added to config.json!');
-  return;
-}
+
+const runSite = async (site) => {
+  if (!config[site.name]?.length) {
+    console.error(`${site.name} not added to config.json!`);
+    console.log('Moving to next site...');
+    return;
+  }
+
+  console.log(`\n\n*****START: ${site.name.toUpperCase()}*******`);
+  await config[site.name].reduce(async (memo, account) => {
+    await memo;
+    await site.function(account.email, account.password);
+  }, undefined);
+
+  console.log(`\n*****END: ${site.name.toUpperCase()}*******`);
+};
 
 const main = async () => {
-  if (vons && vons.length) {
-    console.log('\n\n*****START: VONS.COM*******');
-    await vons.reduce(async (memo, account) => {
-      await memo;
-      await sites.vons(account.email, account.password);
-    }, undefined);
+  const sitesArray = Object.entries(sites);
 
-    console.log('\n*****END: VONS.COM*******');
-  }
-  if (target && target.length) {
-    console.log('\n\n*****TARGET.COM*******');
-    console.log(
-      "Target currently doesn't work in headless mode, will open a browser window",
-    );
-    await target.reduce(async (memo, account) => {
-      await memo;
-      await sites.target(account.email, account.password);
-    }, undefined);
-    console.log('\n*****END: TARGET.COM*******');
+  for (let i = 0; i < sitesArray.length; i++) {
+    await runSite({ name: sitesArray[i][0], function: sitesArray[i][1] });
   }
 };
+
 main();
