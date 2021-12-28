@@ -2,13 +2,15 @@
   "vons": [
     {
       "email": "",
-      "password": ""
+      "password": "",
+      "priority": 1
     }
   ],
   "target": [
     {
       "email": "",
-      "password": ""
+      "password": "",
+      "priority": 2
     }
   ]
 }

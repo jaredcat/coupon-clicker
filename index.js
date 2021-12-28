@@ -25,7 +25,12 @@ const runSite = async (site) => {
 };
 
 const main = async () => {
-  const sitesArray = Object.entries(sites);
+  let sitesArray = Object.entries(sites);
+  sitesArray = sitesArray.sort((a, b) => {
+    const aPriority = config[a[0]]?.[0]?.priority || 999;
+    const bPriority = config[b[0]]?.[0]?.priority || 999;
+    return aPriority - bPriority;
+  });
 
   for (let i = 0; i < sitesArray.length; i++) {
     await runSite({ name: sitesArray[i][0], function: sitesArray[i][1] });
