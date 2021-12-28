@@ -22,16 +22,14 @@ module.exports = async (email, password) => {
 
     try {
       await openBrowser();
-      await goto(
-        'https://www.vons.com/account/sign-in.html?r=https%3A%2F%2Fwww.vons.com%2Fjustforu%2Fcoupons-deals.html&goto=/justforu/coupons-deals.html',
-      );
+      await goto('https://www.vons.com/justforu/coupons-deals.html');
       await write(email, into(textBox(below('Email'))));
       await write(password, into(textBox(below('Password'))));
       await click($('#btnSignIn'));
       await waitFor(5000);
-      if (await $('#error-message').exists()) throw new Error('invalidLogin');
-      if (await $('.create-modal-close-icon').exists())
-        await click($('.create-modal-close-icon'));
+      if (await $('.error-wrong-pwd').exists()) throw new Error('invalidLogin');
+      // if (await $('.create-modal-close-icon').exists())
+      //   await click($('.create-modal-close-icon'));
       await waitFor(2000);
       let couponsClicked = 0;
       let loadMore = true;
