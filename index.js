@@ -1,5 +1,3 @@
-const sites = require('./sites');
-
 let config = null;
 try {
   config = require('./config.json');
@@ -7,6 +5,16 @@ try {
   console.error('No config.json found!');
   return;
 }
+
+const getOrderedSites = (sites) => {
+  return Object.entries(sites).sort((a, b) => {
+    const aPriority = config[a[0]]?.[0]?.priority || 999;
+    const bPriority = config[b[0]]?.[0]?.priority || 999;
+    return aPriority - bPriority;
+  });
+};
+
+const sites = getOrderedSites(require('./sites'));
 
 const runSite = async (site) => {
   if (!config[site.name]?.length) {
@@ -25,16 +33,15 @@ const runSite = async (site) => {
 };
 
 const main = async () => {
-  let sitesArray = Object.entries(sites);
-  sitesArray = sitesArray.sort((a, b) => {
-    const aPriority = config[a[0]]?.[0]?.priority || 999;
-    const bPriority = config[b[0]]?.[0]?.priority || 999;
-    return aPriority - bPriority;
+  await openBrowser({
+    port: 9229,
+    args: ['--disable-audio-output', '--mute-audio', '--disable-web-security'],
+    headless: true,
   });
-
-  for (let i = 0; i < sitesArray.length; i++) {
-    await runSite({ name: sitesArray[i][0], function: sitesArray[i][1] });
+  for (let i = 0; i < sites.length; i++) {
+    await runSite({ name: sites[i][0], function: sites[i][1] });
   }
+  await closeBrowser();
 };
 
 main();

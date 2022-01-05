@@ -1,13 +1,4 @@
-const {
-  openBrowser,
-  goto,
-  click,
-  below,
-  textBox,
-  write,
-  button,
-  closeBrowser,
-} = require('taiko');
+const { goto, click, below, textBox, write, button } = require('taiko');
 const site = 'Vons';
 
 module.exports = async (email, password) => {
@@ -21,8 +12,10 @@ module.exports = async (email, password) => {
     }
 
     try {
-      await openBrowser();
+      // await openBrowser();
+      await waitFor(2000);
       await goto('https://www.vons.com/justforu/coupons-deals.html');
+      await waitFor(3000);
       await write(email, into(textBox(below('Email'))));
       await write(password, into(textBox(below('Password'))));
       await click($('#btnSignIn'));
@@ -30,7 +23,7 @@ module.exports = async (email, password) => {
       if (await $('.error-wrong-pwd').exists()) throw new Error('invalidLogin');
       // if (await $('.create-modal-close-icon').exists())
       //   await click($('.create-modal-close-icon'));
-      await waitFor(2000);
+      // await waitFor(2000);
       let couponsClicked = 0;
       let loadMore = true;
       while (loadMore) {
@@ -40,7 +33,7 @@ module.exports = async (email, password) => {
           while (moreCoupons) {
             try {
               await click(button('Clip Coupon'));
-              const randomClickTime = Math.random() * (1250 - 250) + 250;
+              const randomClickTime = Math.random() * (1500 - 250) + 250;
               await waitFor(randomClickTime);
               couponsClicked++;
             } catch (err) {
@@ -57,14 +50,14 @@ module.exports = async (email, password) => {
           loadMore = false;
         }
       }
+      await click($('.menu-nav__profile-button'));
+      await click('Sign Out');
     } catch (error) {
       if (error.message.startsWith('invalidLogin')) {
         console.error('Invalid email or password');
       } else {
         console.error(error);
       }
-    } finally {
-      await closeBrowser();
     }
   })();
 };

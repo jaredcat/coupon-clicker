@@ -1,14 +1,4 @@
-const {
-  openBrowser,
-  goto,
-  click,
-  textBox,
-  write,
-  button,
-  closeBrowser,
-  setConfig,
-  reload,
-} = require('taiko');
+const { goto, click, textBox, write, button, setConfig } = require('taiko');
 const site = 'Target';
 
 module.exports = async (email, password) => {
@@ -23,11 +13,6 @@ module.exports = async (email, password) => {
     }
 
     try {
-      await openBrowser({
-        port: 9229,
-        args: ['--disable-web-security'],
-        headless: false,
-      });
       await goto('https://www.target.com', {
         headers: {
           'User-Agent':
@@ -89,14 +74,14 @@ module.exports = async (email, password) => {
           loadMore = false;
         }
       }
+      await click($('#account'));
+      await click($('#listaccountNav-guestSignOut'));
     } catch (error) {
       if (error.message.startsWith('invalidLogin')) {
         console.error('Invalid email or password');
       } else {
         console.error(error);
       }
-    } finally {
-      await closeBrowser();
     }
   })();
 };
