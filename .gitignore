@@ -3,3 +3,5 @@ config.json
 debug.log
 honeygain.js
 tontine.js
+
+.DS_Store

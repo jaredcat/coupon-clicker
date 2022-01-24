@@ -40,8 +40,8 @@ const runSite = async (site) => {
 
 const main = async () => {
   await openBrowser({
-    port: 9229,
-    args: ['--disable-audio-output', '--mute-audio', '--disable-web-security'],
+    // port: 9229,
+    args: ['--disable-audio-output', '--mute-audio'],
     headless: true,
   });
   for (let i = 0; i < sites.length; i++) {
