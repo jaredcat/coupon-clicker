@@ -1,8 +1,8 @@
 const { goto, click, textBox, write, button, setConfig } = require('taiko');
 const site = 'Target';
 
-module.exports = async (email, password) => {
-  setConfig({ observeTime: 0 });
+module.exports = async (email, password, userAgent) => {
+  setConfig({ waitForNavigation: false });
   await (async () => {
     if (!email) {
       console.error(`No ${site} email found!`);
@@ -15,10 +15,10 @@ module.exports = async (email, password) => {
     try {
       await goto('https://www.target.com', {
         headers: {
-          'User-Agent':
-            ' Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36',
+          'User-Agent': userAgent,
         },
       });
+      await waitFor(15000);
       await click('Sign in');
       await waitFor(1000);
       await click($('#accountNav-signIn'));

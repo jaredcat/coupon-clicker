@@ -1,7 +1,7 @@
 const { goto, click, below, textBox, write, button } = require('taiko');
 const site = 'Vons';
 
-module.exports = async (email, password) => {
+module.exports = async (email, password, userAgent) => {
   await (async () => {
     if (!email) {
       console.error(`No ${site} email found!`);
@@ -12,18 +12,18 @@ module.exports = async (email, password) => {
     }
 
     try {
-      // await openBrowser();
       await waitFor(2000);
-      await goto('https://www.vons.com/justforu/coupons-deals.html');
+      await goto('https://www.vons.com/justforu/coupons-deals.html', {
+        headers: {
+          'User-Agent': userAgent,
+        },
+      });
       await waitFor(3000);
       await write(email, into(textBox(below('Email'))));
       await write(password, into(textBox(below('Password'))));
       await click($('#btnSignIn'));
       await waitFor(5000);
       if (await $('.error-wrong-pwd').exists()) throw new Error('invalidLogin');
-      // if (await $('.create-modal-close-icon').exists())
-      //   await click($('.create-modal-close-icon'));
-      // await waitFor(2000);
       let couponsClicked = 0;
       let loadMore = true;
       while (loadMore) {

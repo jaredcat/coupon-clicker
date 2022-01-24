@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "taiko index.js",
-    "watch": "taiko index.js --observe"
+    "watch": "taiko index.js --observe",
+    "debug": "cross-env NODE_ENV=development taiko --load index.js --observe"
   },
   "git": "https://github.com/jaredkotoff/coupon-clicker.git",
   "author": "Jared Kotoff",
@@ -14,6 +15,7 @@
     "taiko": "^1.2.8"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "eslint": "^8.7.0"
   }
 }

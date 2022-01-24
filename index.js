@@ -1,3 +1,6 @@
+const { openBrowser, closeBrowser } = require('taiko');
+const { repl } = require('taiko/recorder');
+
 let config = null;
 try {
   config = require('./config.json');
@@ -5,6 +8,9 @@ try {
   console.error('No config.json found!');
   return;
 }
+config.userAgent =
+  config?.userAgent ||
+  ' Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36';
 
 const getOrderedSites = (sites) => {
   return Object.entries(sites).sort((a, b) => {
@@ -26,7 +32,7 @@ const runSite = async (site) => {
   console.log(`\n\n*****START: ${site.name.toUpperCase()}*******`);
   await config[site.name].reduce(async (memo, account) => {
     await memo;
-    await site.function(account.email, account.password);
+    await site.function(account.email, account.password, config.userAgent);
   }, undefined);
 
   console.log(`\n*****END: ${site.name.toUpperCase()}*******`);
@@ -40,6 +46,9 @@ const main = async () => {
   });
   for (let i = 0; i < sites.length; i++) {
     await runSite({ name: sites[i][0], function: sites[i][1] });
+  }
+  if (process.env.NODE_ENV === 'development') {
+    await repl();
   }
   await closeBrowser();
 };
