@@ -20,14 +20,19 @@ export async function clickNavButton(
   return response;
 }
 
-export async function clickOnXpath(
+export async function clickOnXPath(
   page: Page,
   xpath: string | ElementHandle<Node>,
   waitAfterFor = 200,
-): Promise<void> {
+): Promise<boolean> {
   let xpathButton;
   if (typeof xpath === 'string') {
-    xpathButton = await page.waitForXPath(xpath);
+    xpathButton = await page
+      .waitForXPath(xpath, { timeout: 5000 })
+      .catch(() => {
+        console.error(`Button not found XPath:  ${xpath}`);
+        return false;
+      });
   } else {
     xpathButton = xpath;
   }
@@ -35,5 +40,7 @@ export async function clickOnXpath(
   if (xpathButton) {
     await (xpathButton as ElementHandle<Element>).click({ delay: 10 });
     await waitFor(waitAfterFor);
+    return true;
   }
+  return false;
 }
