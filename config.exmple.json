@@ -1,16 +1,25 @@
 {
-  "vons": [
-    {
-      "email": "",
-      "password": "",
-      "priority": 1
+  "2captcha": {
+    "token": ""
+  },
+  "sites": {
+    "vons": {
+      "captcha": true,
+      "accounts": [
+        {
+          "email": "",
+          "password": ""
+        }
+      ]
+    },
+    "target": {
+      "priority": 1,
+      "accounts": [
+        {
+          "email": "",
+          "password": ""
+        }
+      ]
     }
-  ],
-  "target": [
-    {
-      "email": "",
-      "password": "",
-      "priority": 99
-    }
-  ]
+  }
 }

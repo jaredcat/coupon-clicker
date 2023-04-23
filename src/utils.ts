@@ -20,27 +20,72 @@ export async function clickNavButton(
   return response;
 }
 
+export async function clickOnSelector(
+  page: Page,
+  selector: string | ElementHandle<any> | null,
+  { waitAfterFor = 250, timeout = 5000 } = {},
+): Promise<[boolean, Error | null]> {
+  let button = selector;
+  if (typeof selector === 'string') {
+    try {
+      button = await page.waitForSelector(selector, { timeout });
+    } catch (err) {
+      console.error(`Button not found Selector:  ${selector}`, err);
+      return [false, new Error('Selector Button not found')];
+    }
+  }
+
+  if (button) {
+    await (button as ElementHandle<Element>).click({ delay: 10 });
+    await waitFor(waitAfterFor);
+    return [true, null];
+  }
+  return [false, new Error(`Button element not found`)];
+}
+
 export async function clickOnXPath(
   page: Page,
-  xpath: string | ElementHandle<Node>,
-  waitAfterFor = 200,
-): Promise<boolean> {
-  let xpathButton;
+  xpath: string | ElementHandle<Node> | null,
+  { waitAfterFor = 250, timeout = 5000 } = {},
+): Promise<[boolean, Error | null]> {
+  let xpathButton = xpath;
   if (typeof xpath === 'string') {
-    xpathButton = await page
-      .waitForXPath(xpath, { timeout: 5000 })
-      .catch(() => {
-        console.error(`Button not found XPath:  ${xpath}`);
-        return false;
-      });
-  } else {
-    xpathButton = xpath;
+    try {
+      xpathButton = await page.waitForXPath(xpath, { timeout });
+    } catch (err) {
+      console.error(`Button not found XPath:  ${xpath}`, err);
+      return [false, new Error('XPath Button not found')];
+    }
   }
 
   if (xpathButton) {
     await (xpathButton as ElementHandle<Element>).click({ delay: 10 });
     await waitFor(waitAfterFor);
-    return true;
+    return [true, null];
   }
-  return false;
+  return [false, new Error(`Button element not found`)];
+}
+
+export async function solveCaptcha(
+  page: Page,
+  checkSelector: string,
+): Promise<boolean> {
+  const securityCheck = await page.$(checkSelector);
+  if (securityCheck) {
+    let captchas = 0;
+    let solved = 0;
+    for (const frame of page.mainFrame().childFrames()) {
+      // Attempt to solve any potential captchas in those frames
+      const results = await frame.solveRecaptchas();
+      captchas += results.captchas.length;
+      solved += results.solved.length;
+    }
+    if (solved === captchas) {
+      page.waitForNavigation();
+      return true;
+    } else {
+      return false;
+    }
+  }
+  return true;
 }

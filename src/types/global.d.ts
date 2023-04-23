@@ -1,11 +1,18 @@
 interface Config {
-  [key: string]: SiteOptions[];
+  '2captcha'?: {
+    token: string;
+  };
+  sites: {
+    [key: string]: SiteOptions;
+  };
 }
 
 interface SiteOptions {
-  email: string;
-  password: string;
   priority?: number;
+  accounts: {
+    email: string;
+    password: string;
+  }[];
 }
 
 interface Site {

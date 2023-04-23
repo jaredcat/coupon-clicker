@@ -6,7 +6,7 @@ const loginUrl = 'https://www.target.com/account';
 const loginButton = 'button[type=submit]';
 
 const offersPage = 'https://www.target.com/circle/offers';
-const saveOfferButtonXPath = "//button//div[text()='Save offer']";
+const couponButtonXPath = "//button//div[text()='Save offer']";
 const loadMoreButtonXPath = "//button[contains(., 'Load more')]";
 
 async function clipCoupons(page: Page): Promise<number> {
@@ -23,9 +23,9 @@ async function clipCoupons(page: Page): Promise<number> {
   let couponsClicked = 0;
   let loadMore = true;
   while (loadMore) {
-    const offerButtons = await page.$x(saveOfferButtonXPath);
+    const offerButtons = await page.$x(couponButtonXPath);
     for (let i = 0; i < offerButtons.length; i++) {
-      await clickOnXPath(page, offerButtons[i], 2500);
+      await clickOnXPath(page, offerButtons[i], { waitAfterFor: 2500 });
 
       // Target has a limit on how many offers you can have at once
       // Check if hit the max offers clipped
@@ -39,7 +39,7 @@ async function clipCoupons(page: Page): Promise<number> {
       couponsClicked++;
     }
     if (loadMore) {
-      await clickOnXPath(page, loadMoreButtonXPath, 3000);
+      await clickOnXPath(page, loadMoreButtonXPath, { waitAfterFor: 3000 });
     }
   }
 
