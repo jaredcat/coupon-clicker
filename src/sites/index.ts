@@ -1,3 +1,5 @@
+import { Site } from 'src/common/Site';
+
 const modules: Site[] = [];
 const path = require('path').join(__dirname);
 

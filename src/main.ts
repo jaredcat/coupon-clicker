@@ -7,10 +7,28 @@ import RecaptchaPlugin from 'puppeteer-extra-plugin-recaptcha';
 import unorderedSites from './sites';
 import untypedConfig from '../config.json';
 import { waitFor } from './utils';
+import { Site } from './common/Site';
 if (!untypedConfig) {
   console.error('No config.json found!');
   exit(1);
 }
+interface Config {
+  '2captcha'?: {
+    token: string;
+  };
+  sites: {
+    [key: string]: SiteOptions;
+  };
+}
+
+export interface SiteOptions {
+  order?: number;
+  accounts: {
+    email: string;
+    password: string;
+  }[];
+}
+
 const config: Config = untypedConfig;
 const sites: Site[] = getOrderedSites(unorderedSites);
 const token = config?.['2captcha']?.token;
