@@ -17,9 +17,9 @@ const token = config?.['2captcha']?.token;
 
 function getOrderedSites(sites: Site[]) {
   let orderedSites = sites.sort((a, b) => {
-    const aPriority = config.sites[a.name]?.priority || 999;
-    const bPriority = config.sites[b.name]?.priority || 999;
-    return aPriority - bPriority;
+    const aOrder = config.sites[a.name]?.order || 999;
+    const bOrder = config.sites[b.name]?.order || 999;
+    return aOrder - bOrder;
   });
   return orderedSites;
 }

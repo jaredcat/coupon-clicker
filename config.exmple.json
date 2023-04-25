@@ -13,7 +13,7 @@
       ]
     },
     "target": {
-      "priority": 1,
+      "order": 1,
       "accounts": [
         {
           "email": "",

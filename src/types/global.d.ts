@@ -8,7 +8,7 @@ interface Config {
 }
 
 interface SiteOptions {
-  priority?: number;
+  order?: number;
   accounts: {
     email: string;
     password: string;
