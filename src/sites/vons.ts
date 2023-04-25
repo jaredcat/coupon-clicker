@@ -28,6 +28,7 @@ async function run(page: Page, email: string, password: string) {
   if (!ok) return;
   const couponsClicked = await clipCoupons(page);
   console.log(`Loaded ${couponsClicked} new offers for ${email}!\n\n`);
+  // TODO: add logout function for multiple accounts
   // await logout(page);
 }
 
@@ -45,6 +46,7 @@ async function clipCoupons(page: Page): Promise<number> {
         waitAfterFor: 1500,
       });
     }
+    loadMoreButton = await page.$(loadMoreButtonSelector);
   }
 
   // Click all the coupons on the page
