@@ -1,7 +1,11 @@
 node_modules
+build
 config.json
-debug.log
-honeygain.js
-tontine.js
 
+debug.log
 .DS_Store
+
+src/sites/*
+!src/sites/index.ts
+!src/sites/target.ts
+!src/sites/vons.ts
