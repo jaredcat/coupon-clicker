@@ -85,13 +85,13 @@ async function main() {
       const page = await browser.newPage();
       await page.setJavaScriptEnabled(true);
       await page.setRequestInterception(true);
-      page.on('request', async (request) => {
-        if (request.resourceType() == 'image') {
-          await request.abort();
-        } else {
-          await request.continue();
-        }
-      });
+      // page.on('request', async (request) => {
+      //   if (request.resourceType() == 'image') {
+      //     await request.abort();
+      //   } else {
+      //     await request.continue();
+      //   }
+      // });
       for (let i = 0; i < sites.length; i++) {
         await runSite(page, sites[i]);
       }
