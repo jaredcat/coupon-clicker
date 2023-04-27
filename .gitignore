@@ -4,8 +4,10 @@ config.json
 
 debug.log
 .DS_Store
+snyk-macos
 
 src/sites/*
 !src/sites/index.ts
 !src/sites/target.ts
 !src/sites/vons.ts
+!src/sites/cvs.ts
