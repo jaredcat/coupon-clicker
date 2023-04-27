@@ -11,7 +11,7 @@ const offersPage = 'https://www.vons.com/foru/coupons-deals.html';
 const couponButtonXPath = "//button[contains(., 'Clip Coupon')]";
 const loadMoreButtonSelector = 'button.load-more';
 
-async function run(page: Page, email: string, password: string) {
+async function run(page: Page, email: string, password: string): Promise<void> {
   if (!email) {
     console.error(`No ${site} email found!`);
     return;
@@ -27,35 +27,6 @@ async function run(page: Page, email: string, password: string) {
   const couponsClicked = await clipCoupons(page);
   console.log(`Loaded ${couponsClicked} new offers for ${email}!\n\n`);
   // await logout(page);
-}
-
-async function clipCoupons(page: Page): Promise<number> {
-  await page.goto(offersPage, {
-    timeout: 15 * 1000,
-    waitUntil: ['domcontentloaded', 'networkidle2'],
-  });
-
-  // Load all the coupons available on the page
-  let loadMoreButton = await page.$(loadMoreButtonSelector);
-  while (loadMoreButton) {
-    if (loadMoreButton) {
-      await clickOnSelector(page, loadMoreButton, {
-        waitAfterFor: 1500,
-      });
-    }
-  }
-
-  // Click all the coupons on the page
-  let couponsClicked = 0;
-  let couponButtons = await page.$x(couponButtonXPath);
-  while (couponButtons.length) {
-    // We have to get each coupon one at a time because of shadow DOM
-    const couponButton = couponButtons[0];
-    await clickOnXPath(page, couponButton, { waitAfterFor: 2500 });
-    couponsClicked++;
-    couponButtons = await page.$x(couponButtonXPath);
-  }
-  return couponsClicked;
 }
 
 async function login(
@@ -85,6 +56,35 @@ async function login(
 
   ok = true;
   return ok;
+}
+
+async function clipCoupons(page: Page): Promise<number> {
+  await page.goto(offersPage, {
+    timeout: 15 * 1000,
+    waitUntil: ['domcontentloaded', 'networkidle2'],
+  });
+
+  // Load all the coupons available on the page
+  let loadMoreButton = await page.$(loadMoreButtonSelector);
+  while (loadMoreButton) {
+    if (loadMoreButton) {
+      await clickOnSelector(page, loadMoreButton, {
+        waitAfterFor: 1500,
+      });
+    }
+  }
+
+  // Click all the coupons on the page
+  let couponsClicked = 0;
+  let couponButtons = await page.$x(couponButtonXPath);
+  while (couponButtons.length) {
+    // We have to get each coupon one at a time because of shadow DOM
+    const couponButton = couponButtons[0];
+    await clickOnXPath(page, couponButton, { waitAfterFor: 2500 });
+    couponsClicked++;
+    couponButtons = await page.$x(couponButtonXPath);
+  }
+  return couponsClicked;
 }
 
 export default run;

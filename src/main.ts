@@ -1,7 +1,7 @@
 import { exit } from 'process';
 import { Page } from 'puppeteer';
 import puppeteer from 'puppeteer-extra';
-import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+// import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import RecaptchaPlugin from 'puppeteer-extra-plugin-recaptcha';
 
 import unorderedSites from './sites';
@@ -42,24 +42,28 @@ function getOrderedSites(sites: Site[]) {
   return orderedSites;
 }
 
-async function runSite(page: Page, site: any) {
-  if (!config.sites[site.name]?.accounts?.length) {
+async function runSite(page: Page, site: Site, siteCount: number) {
+  const currentSite = config.sites[site.name];
+  if (!currentSite?.accounts?.length) {
     console.error(`${site.name} not added to config.json!`);
     console.log('Moving to next site...');
     return;
   }
 
+  const { accounts } = currentSite;
+
   console.log(`\n\n*****START: ${site.name.toUpperCase()}*******`);
-  for (let i = 0; i < config.sites[site.name].accounts.length; i++) {
-    const account = config.sites[site.name].accounts[i];
-    await site.run(page, account.email, account.password);
+  for (let i = 0; i < accounts.length; i++) {
+    const account = accounts[i];
+    const runCount = siteCount + i + 1;
+    await site.run(page, account.email, account.password, runCount);
     await waitFor(5000);
   }
   console.log(`\n*****END: ${site.name.toUpperCase()}*******`);
 }
 
 async function main() {
-  puppeteer.use(StealthPlugin());
+  // puppeteer.use(StealthPlugin());
 
   if (token) {
     puppeteer.use(
@@ -75,25 +79,17 @@ async function main() {
 
   puppeteer
     .launch({
-      headless: false,
+      headless: 'new',
       args: [
         '--disable-features=IsolateOrigins,site-per-process,SitePerProcess',
         '--flag-switches-begin --disable-site-isolation-trials --flag-switches-end',
+        '--no-sandbox',
       ],
     })
     .then(async (browser) => {
       const page = await browser.newPage();
-      await page.setJavaScriptEnabled(true);
-      await page.setRequestInterception(true);
-      // page.on('request', async (request) => {
-      //   if (request.resourceType() == 'image') {
-      //     await request.abort();
-      //   } else {
-      //     await request.continue();
-      //   }
-      // });
       for (let i = 0; i < sites.length; i++) {
-        await runSite(page, sites[i]);
+        await runSite(page, sites[i], i + 1);
       }
       await browser.close();
     })

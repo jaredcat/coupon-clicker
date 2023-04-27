@@ -53,8 +53,7 @@ export async function clickOnXPath(
     try {
       xpathButton = await page.waitForXPath(xpath, { timeout });
     } catch (err) {
-      console.error(`Button not found XPath:  ${xpath}`, err);
-      return [false, new Error('XPath Button not found')];
+      return [false, new Error(`XPath Button not found:  ${xpath}`)];
     }
   }
 
