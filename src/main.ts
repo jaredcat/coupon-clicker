@@ -1,70 +1,53 @@
 import { exit } from 'process';
-import { Page } from 'puppeteer';
 import puppeteer from 'puppeteer-extra';
-// import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-import RecaptchaPlugin from 'puppeteer-extra-plugin-recaptcha';
-
-import unorderedSites from './sites';
-import untypedConfig from '../config.json';
+import Site from './models/site';
+import Logger from './logger';
+import getSites from './sites';
 import { waitFor } from './utils';
-import { Site } from './common/Site';
+
+// Puppeteer plugins
+import RecaptchaPlugin from 'puppeteer-extra-plugin-recaptcha';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+// import AdblockerPlugin from 'puppeteer-extra-plugin-adblocker';
+
+// Import user configs
+import untypedConfig from '../config.json';
+import Singletons from './models/singletons';
 if (!untypedConfig) {
   console.error('No config.json found!');
   exit(1);
 }
-interface Config {
-  '2captcha'?: {
-    token: string;
-  };
-  sites: {
-    [key: string]: SiteOptions;
-  };
-}
-
-export interface SiteOptions {
-  order?: number;
-  accounts: {
-    email: string;
-    password: string;
-  }[];
-}
 
 const config: Config = untypedConfig;
-const sites: Site[] = getOrderedSites(unorderedSites);
+const sites: Site[] = getSites(config);
+
 const token = config?.['2captcha']?.token;
 
-function getOrderedSites(sites: Site[]) {
-  let orderedSites = sites.sort((a, b) => {
-    const aOrder = config.sites[a.name]?.order || 999;
-    const bOrder = config.sites[b.name]?.order || 999;
-    return aOrder - bOrder;
-  });
-  return orderedSites;
-}
+const LOG_DIR = config?.logger?.logDir;
+const logger = new Logger(LOG_DIR, config?.logger?.logLevel);
 
-async function runSite(page: Page, site: Site, siteCount: number) {
-  const currentSite = config.sites[site.name];
-  if (!currentSite?.accounts?.length) {
-    console.error(`${site.name} not added to config.json!`);
-    console.log('Moving to next site...');
-    return;
-  }
+async function runSite(singletons: Singletons, site: Site) {
+  const siteName = site.name;
+  const currentSiteConfig = config.sites[siteName.toLowerCase()];
 
-  const { accounts } = currentSite;
+  logger.setCurrentSite(siteName);
 
-  console.log(`\n\n*****START: ${site.name.toUpperCase()}*******`);
+  const { accounts } = currentSiteConfig;
+
+  logger.info(`*******START*******`);
   for (let i = 0; i < accounts.length; i++) {
+    logger.info(`Account ${i + 1} of ${accounts.length}: ${accounts[i].email}`);
     const account = accounts[i];
-    const runCount = siteCount + i + 1;
-    await site.run(page, account.email, account.password, runCount);
+    const couponsClicked = await site.run(singletons, account);
+    logger.info(
+      `Clipped ${couponsClicked} coupons for ${accounts[i].email}\n\n`,
+    );
     await waitFor(5000);
   }
-  console.log(`\n*****END: ${site.name.toUpperCase()}*******`);
+  logger.info(`*******END*******`);
 }
 
 async function main() {
-  // puppeteer.use(StealthPlugin());
-
   if (token) {
     puppeteer.use(
       RecaptchaPlugin({
@@ -76,26 +59,53 @@ async function main() {
       }),
     );
   }
-
-  puppeteer
+  const browser = await puppeteer
+    .use(StealthPlugin())
+    // .use(AdblockerPlugin({ blockTrackers: true }))
     .launch({
       headless: 'new',
+      defaultViewport: null,
+      ignoreHTTPSErrors: true,
+      slowMo: 100,
+      // devtools: true,
+
       args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--start-maximized',
+        // '--window-size=1920,1000',
+
         '--disable-features=IsolateOrigins,site-per-process,SitePerProcess',
         '--flag-switches-begin --disable-site-isolation-trials --flag-switches-end',
-        '--no-sandbox',
+        '--disable-blink-features=AutomationControlled',
       ],
-    })
-    .then(async (browser) => {
-      const page = await browser.newPage();
-      for (let i = 0; i < sites.length; i++) {
-        await runSite(page, sites[i], i + 1);
-      }
-      await browser.close();
-    })
-    .catch((err) => {
-      console.error(err);
     });
+
+  try {
+    const page = await browser.newPage();
+    await page.setExtraHTTPHeaders({
+      'Accept-Language': 'en-US',
+      'Accept-Encoding': 'deflate, gzip;q=1.0, *;q=0.5',
+      DNT: '1',
+    });
+    const singletons: Singletons = { page, logger };
+
+    // Navigate to the page that will perform the tests.
+    await page.goto('https://bot.sannysoft.com', {
+      timeout: 15 * 1000,
+      waitUntil: ['domcontentloaded', 'networkidle2'],
+    });
+    await logger.screenshot(page, 'stealth test page');
+
+    for (let i = 0; i < sites.length; i++) {
+      await runSite(singletons, sites[i]);
+    }
+    await browser.close();
+  } catch (err) {
+    logger.error(`${err}`);
+    browser?.close();
+  }
 }
 
 main();

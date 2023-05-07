@@ -6,9 +6,10 @@ debug.log
 .DS_Store
 snyk-macos
 
-last-run
+logs/
 
 src/sites/*
+!src/sites/site.ts
 !src/sites/index.ts
 !src/sites/target.ts
 !src/sites/vons.ts

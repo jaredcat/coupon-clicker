@@ -1,18 +1,29 @@
-import { Site } from 'src/common/Site';
+import Site from '../models/site';
 
-const modules: Site[] = [];
 const path = require('path').join(__dirname);
+const siteFiles = require('fs').readdirSync(path);
 
-require('fs')
-  .readdirSync(path)
-  .forEach(function (file: string) {
+function getSites(config: Config): Site[] {
+  const sites: Site[] = [];
+  const siteConfigs = config.sites;
+  siteFiles.forEach(function (file: string) {
     const name = file.split('.')[0];
-    if (name === 'index') return;
+    if (name === 'index' || name === 'site' || name === 'example') return;
+    if (!siteConfigs[name]?.accounts?.length) return;
 
-    modules.push({
-      name,
-      run: require('./' + file).default,
-    });
+    const site: Site = require('./' + file).default;
+    sites.push(site);
   });
+  return getOrderedSites(config, sites);
+}
 
-export default modules;
+function getOrderedSites(config: Config, sites: Site[]) {
+  let orderedSites = sites.sort((a, b) => {
+    const aOrder = config.sites[a.name.toLowerCase()]?.order || 999;
+    const bOrder = config.sites[b.name.toLowerCase()]?.order || 999;
+    return aOrder - bOrder;
+  });
+  return orderedSites;
+}
+
+export default getSites;
