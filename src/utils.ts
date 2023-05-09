@@ -1,5 +1,5 @@
 import { ElementHandle, HTTPResponse, Page } from 'puppeteer';
-import Singletons from './models/singletons';
+import Singletons from './models/singletons.model';
 
 export async function waitFor(milliseconds: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));

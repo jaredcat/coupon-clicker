@@ -1,36 +1,39 @@
 import { exit } from 'process';
 import puppeteer from 'puppeteer-extra';
-import Site from './models/site';
+import Site from './models/site.model';
 import Logger from './logger';
 import getSites from './sites';
 import { waitFor } from './utils';
 
 // Puppeteer plugins
 import RecaptchaPlugin from 'puppeteer-extra-plugin-recaptcha';
-import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-// import AdblockerPlugin from 'puppeteer-extra-plugin-adblocker';
+// import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+
+import Singletons from './models/singletons.model';
 
 // Import user configs
-import untypedConfig from '../config.json';
-import Singletons from './models/singletons';
-if (!untypedConfig) {
-  console.error('No config.json found!');
+const config: Config = require('../config.js');
+if (!config) {
+  console.error('No config.js found!');
   exit(1);
 }
-
-const config: Config = untypedConfig;
+const captchaToken = config?.['2captcha']?.token;
 const sites: Site[] = getSites(config);
-
-const token = config?.['2captcha']?.token;
 
 const LOG_DIR = config?.logger?.logDir;
 const logger = new Logger(LOG_DIR, config?.logger?.logLevel);
 
 async function runSite(singletons: Singletons, site: Site) {
   const siteName = site.name;
-  const currentSiteConfig = config.sites[siteName.toLowerCase()];
-
   logger.setCurrentSite(siteName);
+  const currentSiteConfig = config.sites[siteName.toLowerCase()];
+  const requiresCaptcha = site?.requiresCaptcha;
+  if (requiresCaptcha && !captchaToken) {
+    logger.error(
+      `2captcha token required for this site but one wasn't configured! -- Get one here: https://2captcha.com/?from=17648232`,
+    );
+    return;
+  }
 
   const { accounts } = currentSiteConfig;
 
@@ -38,43 +41,42 @@ async function runSite(singletons: Singletons, site: Site) {
   for (let i = 0; i < accounts.length; i++) {
     logger.info(`Account ${i + 1} of ${accounts.length}: ${accounts[i].email}`);
     const account = accounts[i];
-    const couponsClicked = await site.run(singletons, account);
-    logger.info(
-      `Clipped ${couponsClicked} coupons for ${accounts[i].email}\n\n`,
-    );
+    const shouldLogout = accounts.length > 1;
+    const couponsClicked = await site.run(singletons, account, shouldLogout);
+    logger.info(`Clipped ${couponsClicked} coupons for ${accounts[i].email}`);
     await waitFor(5000);
   }
-  logger.info(`*******END*******`);
+  logger.info(`*******END*******\n\n`);
 }
 
 async function main() {
-  if (token) {
+  if (captchaToken) {
     puppeteer.use(
       RecaptchaPlugin({
         provider: {
           id: '2captcha',
-          token,
+          token: captchaToken,
         },
         visualFeedback: true,
       }),
     );
   }
+
+  const browserCacheDir = 'browser-cache';
   const browser = await puppeteer
-    .use(StealthPlugin())
-    // .use(AdblockerPlugin({ blockTrackers: true }))
+    // .use(StealthPlugin())
     .launch({
       headless: 'new',
+      userDataDir: browserCacheDir,
       defaultViewport: null,
       ignoreHTTPSErrors: true,
-      slowMo: 100,
-      // devtools: true,
+      slowMo: 80,
 
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--start-maximized',
-        // '--window-size=1920,1000',
 
         '--disable-features=IsolateOrigins,site-per-process,SitePerProcess',
         '--flag-switches-begin --disable-site-isolation-trials --flag-switches-end',
@@ -84,6 +86,8 @@ async function main() {
 
   try {
     const page = await browser.newPage();
+    const client = await page.target().createCDPSession();
+    await client.send('Network.clearBrowserCache');
     await page.setExtraHTTPHeaders({
       'Accept-Language': 'en-US',
       'Accept-Encoding': 'deflate, gzip;q=1.0, *;q=0.5',

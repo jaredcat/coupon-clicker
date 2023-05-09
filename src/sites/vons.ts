@@ -1,32 +1,31 @@
-import {
-  clickNavButton,
-  clickOnSelector,
-  clickOnXPath,
-  solveCaptcha,
-} from '../utils';
-import Site, { assertValidAccount } from '../models/site';
-import Singletons from '../models/singletons';
+import { clickNavButton, clickOnSelector, solveCaptcha } from '../utils';
+import Site, { assertValidAccount } from '../models/site.model';
+import Singletons from '../models/singletons.model';
 import { ElementHandle } from 'puppeteer';
 
 const name = 'Vons';
+const requiresCaptcha = true;
 const loginUrl = 'https://www.vons.com/account/sign-in.html';
+const couponsPage = 'https://www.vons.com/foru/coupons-deals.html';
+
 const loginButtonSelector = '#btnSignIn';
-
-const offersPage = 'https://www.vons.com/foru/coupons-deals.html';
-
-// const couponButtonXPath = "//button[contains(., 'Clip Coupon')]";
 const couponButtonSelector = '.grid-coupon-btn';
 const loadMoreButtonSelector = 'button.load-more';
 
 const vons: Site = {
   name,
+  requiresCaptcha,
   run,
   clipCoupons,
   login,
   // logout,
 };
 
-async function run(singletons: Singletons, account: Account): Promise<number> {
+async function run(
+  singletons: Singletons,
+  account: Account,
+  shouldLogout = false,
+): Promise<number> {
   assertValidAccount(account, name);
 
   const ok = await login(singletons, account);
@@ -41,7 +40,7 @@ async function run(singletons: Singletons, account: Account): Promise<number> {
 
 async function clipCoupons(singletons: Singletons): Promise<number> {
   const { page, logger } = singletons;
-  await page.goto(offersPage, {
+  await page.goto(couponsPage, {
     timeout: 15 * 1000,
     waitUntil: ['domcontentloaded', 'networkidle2'],
   });

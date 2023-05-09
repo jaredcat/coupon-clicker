@@ -1,12 +1,12 @@
 import { clickNavButton, clickOnXPath, waitFor } from '../utils';
-import Site, { assertValidAccount } from '../models/site';
-import Singletons from '../models/singletons';
+import Site, { assertValidAccount } from '../models/site.model';
+import Singletons from '../models/singletons.model';
 
 const name = 'Target';
 const loginUrl = 'https://www.target.com/account';
-const loginButton = 'button[type=submit]';
+const couponsPage = 'https://www.target.com/circle/offers';
 
-const offersPage = 'https://www.target.com/circle/offers';
+const loginButton = 'button[type=submit]';
 const couponButtonXPath = "//button//div[text()='Save offer']";
 const loadMoreButtonXPath = "//button[contains(., 'Load more')]";
 
@@ -18,20 +18,26 @@ const target: Site = {
   logout,
 };
 
-async function run(singletons: Singletons, account: Account): Promise<number> {
+async function run(
+  singletons: Singletons,
+  account: Account,
+  shouldLogout = false,
+): Promise<number> {
   assertValidAccount(account, name);
 
   const ok = await login(singletons, account);
   if (!ok) return 0;
   const couponsClicked = await clipCoupons(singletons);
-  await logout(singletons);
+  if (shouldLogout) {
+    await logout(singletons);
+  }
 
   return couponsClicked;
 }
 
 async function clipCoupons(singletons: Singletons): Promise<number> {
   const { page, logger } = singletons;
-  await page.goto(offersPage, {
+  await page.goto(couponsPage, {
     timeout: 15 * 1000,
     waitUntil: ['domcontentloaded', 'networkidle2'],
   });

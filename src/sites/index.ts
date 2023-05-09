@@ -1,4 +1,4 @@
-import Site from '../models/site';
+import Site from '../models/site.model';
 
 const path = require('path').join(__dirname);
 const siteFiles = require('fs').readdirSync(path);
@@ -8,7 +8,7 @@ function getSites(config: Config): Site[] {
   const siteConfigs = config.sites;
   siteFiles.forEach(function (file: string) {
     const name = file.split('.')[0];
-    if (name === 'index' || name === 'site' || name === 'example') return;
+    if (name === 'index' || name === 'example' || name === 'site') return;
     if (!siteConfigs[name]?.accounts?.length) return;
 
     const site: Site = require('./' + file).default;

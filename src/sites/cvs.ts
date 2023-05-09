@@ -1,14 +1,13 @@
-import Site, { assertValidAccount } from '../models/site';
+import Site, { assertValidAccount } from '../models/site.model';
 import { clickNavButton, clickOnSelector, clickOnXPath } from '../utils';
-import Singletons from '../models/singletons';
+import Singletons from '../models/singletons.model';
 
 const name = 'CVS';
 const loginUrl =
   'https://www.cvs.com/account/login?icid=cvsheader:signin&screenname=/';
+const couponsPage = 'https://www.cvs.com/extracare/home/';
+
 const loginButtonXPath = "//div[text()='Sign in']";
-
-const offersPage = 'https://www.vons.com/foru/coupons-deals.html';
-
 const couponButtonXPath = "//button[contains(., 'Clip Coupon')]";
 const loadMoreButtonSelector = 'button.load-more';
 
@@ -19,7 +18,11 @@ const cvs: Site = {
   login,
 };
 
-async function run(singletons: Singletons, account: Account): Promise<number> {
+async function run(
+  singletons: Singletons,
+  account: Account,
+  shouldLogout = false,
+): Promise<number> {
   assertValidAccount(account, name);
   const ok = await login(singletons, account);
   if (!ok) return 0;
@@ -31,7 +34,7 @@ async function run(singletons: Singletons, account: Account): Promise<number> {
 
 async function clipCoupons(singletons: Singletons): Promise<number> {
   const { page, logger } = singletons;
-  await page.goto(offersPage, {
+  await page.goto(couponsPage, {
     timeout: 15 * 1000,
     waitUntil: ['domcontentloaded', 'networkidle2'],
   });
@@ -92,8 +95,6 @@ async function login(
 
   await page.waitForSelector('input[type="password"]');
   await page.type('input[type="password"]', password);
-  await page.screenshot({ path: 'cvs-1password.png', fullPage: true });
-
   await logger.screenshot(page);
 
   const [loginButton] = await page.$x(loginButtonXPath);
