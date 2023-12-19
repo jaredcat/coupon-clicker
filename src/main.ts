@@ -7,7 +7,6 @@ import Logger from './logger';
 import getSites from './sites';
 import { waitFor } from './utils';
 
-// Puppeteer plugins
 import RecaptchaPlugin from 'puppeteer-extra-plugin-recaptcha';
 // import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 
@@ -114,8 +113,13 @@ async function main() {
     await logger.screenshot(page, 'stealth test page');
 
     for (let i = 0; i < sites.length; i++) {
-      if (!sites[i].disabled) {
-        await runSite(singletons, sites[i]);
+      const site = sites[i];
+      if (!site.disabled) {
+        await runSite(singletons, site);
+      } else {
+        logger.info(
+          `${site.name} is disabled or not working. See module's code`,
+        );
       }
     }
     await browser.close();

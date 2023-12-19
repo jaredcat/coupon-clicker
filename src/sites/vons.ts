@@ -1,4 +1,9 @@
-import { clickNavButton, clickOnSelector, solveCaptcha } from '../utils';
+import {
+  clickNavButton,
+  clickOnSelector,
+  clickOnXPath,
+  solveCaptcha,
+} from '../utils';
 import Site, {
   assertValidAccount,
   clearSessionStorage,
@@ -11,7 +16,7 @@ const requiresCaptcha = true;
 const loginUrl = 'https://www.vons.com/account/sign-in.html';
 const couponsPage = 'https://www.vons.com/foru/coupons-deals.html';
 
-const loginButtonSelector = '#btnSignIn';
+const loginButtonSelector = '.auth-styles__btn';
 const couponButtonSelector = '.grid-coupon-btn';
 const loadMoreButtonSelector = 'button.load-more';
 
@@ -84,7 +89,9 @@ async function clickCouponBatch(singletons: Singletons): Promise<number> {
     if (couponButtons?.length) {
       logger.info(`clicking coupons: ${couponButtons?.length} remaining...`);
       // We have to get each coupon one at a time because of shadow DOM
-      await clickOnSelector(page, couponButtons[0], { waitAfterFor: 2500 });
+      await clickOnSelector(page, couponButtons[couponButtons.length - 1], {
+        waitAfterFor: 2500,
+      });
       couponsClicked++;
     }
   } while (couponButtons?.length);
@@ -108,23 +115,40 @@ async function login(
 
   if (await _checkedIfLoggedIn(page)) return true;
 
-  let ok = solveCaptcha(singletons, 'body > iframe');
+  let ok = await solveCaptcha(singletons, 'body > iframe');
   if (!ok) return false;
 
-  await page.waitForSelector('#label-password');
+  await page.waitForSelector('#enterUsername');
+  await logger.screenshot(page, 'username selector found');
+
+  await page.type('#enterUsername', email);
+  await logger.screenshot(page, 'username entered');
+  const continueButton = await page.$(loginButtonSelector);
+  await logger.screenshot(page, 'finding continueButton');
+  if (continueButton) {
+    await clickOnSelector(page, continueButton);
+    await logger.screenshot(page, 'continueButton clicked');
+  }
+
+  [ok] = await clickOnXPath(page, '//div[@class="auth-styles__action-item"]/a');
+  if (ok) {
+    await logger.screenshot(page, 'use password link/button clicked');
+  } else {
+    await logger.screenshot(page, 'No use password link/button found');
+    return false;
+  }
+
+  await page.waitForSelector('#password');
   await logger.screenshot(page, 'password selector found');
-
-  await page.type('#label-email', email);
-  await page.type('#label-password', password);
-  await logger.screenshot(page, 'login info entered');
-
+  await page.type('#password', password);
+  await logger.screenshot(page, 'password entered');
   const loginButton = await page.$(loginButtonSelector);
   await logger.screenshot(page, 'finding login button');
   if (loginButton) {
     await clickNavButton(page, loginButton);
   }
 
-  ok = solveCaptcha(singletons, 'body > iframe');
+  ok = await solveCaptcha(singletons, 'body > iframe');
   return ok;
 }
 

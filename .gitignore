@@ -12,6 +12,7 @@ src/sites/*
 !src/sites/target.ts
 !src/sites/vons.ts
 !src/sites/cvs.ts
+!src/sites/honeygain.ts
 
 debug.log
 .DS_Store
