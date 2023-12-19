@@ -4,27 +4,30 @@
   "description": "Clicks all coupons for Target.com and Vons.com",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node --files src/main.ts",
+    "start": "cross-env NODE_ENV=production ts-node --files src/main.ts",
+    "debug": "cross-env NODE_ENV=development ts-node --files src/main.ts",
     "lint": "tsc --noEmit && prettier --check .",
-    "debug": "cross-env NODE_ENV=development taiko --load index.js --observe"
+    "postinstall": "node scripts/install.js"
   },
   "git": "https://github.com/jaredkotoff/coupon-clicker.git",
   "author": "Jared Kotoff",
   "license": "ISC",
   "dependencies": {
-    "puppeteer": "^19.11.0",
+    "prompts": "^2.4.2",
+    "puppeteer": "^21.6.1",
     "puppeteer-extra": "^3.3.6",
-    "puppeteer-extra-plugin-recaptcha": "^3.6.8",
-    "puppeteer-extra-plugin-stealth": "^2.11.2",
-    "winston": "^3.8.2"
+    "puppeteer-extra-plugin-recaptcha": "3.6.8",
+    "query-selector-shadow-dom": "^1.0.1",
+    "winston": "^3.11.0"
   },
   "devDependencies": {
-    "@types/node": "^18.16.0",
-    "@typescript-eslint/eslint-plugin": "^5.59.1",
+    "@types/node": "^20.10.5",
+    "@types/prompts": "^2.4.9",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
     "cross-env": "^7.0.3",
-    "eslint": "^8.39.0",
-    "prettier": "^2.8.8",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.0.4"
+    "eslint": "^8.56.0",
+    "prettier": "^3.1.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
   }
 }

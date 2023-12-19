@@ -1,13 +1,18 @@
 node_modules
 build
-config.json
+browser-cache
+logs
 
-debug.log
-.DS_Store
-snyk-macos
+config.json
+config.js
 
 src/sites/*
+!src/sites/site.ts
 !src/sites/index.ts
 !src/sites/target.ts
 !src/sites/vons.ts
 !src/sites/cvs.ts
+
+debug.log
+.DS_Store
+snyk-macos

@@ -14,7 +14,7 @@ Submit your own site file in a PR!
 
 ### Vons.com
 
-Vons has a captcha page when when signing in. You will need to sign up for [2captcha](https://2captcha.com/?from=17648232) and add a few dollars to your account and add your token to your `config.json`.
+Vons has a captcha page when when signing in. You will need to sign up for [2captcha](https://2captcha.com/?from=17648232) and add a few dollars to your account and add your token to your `config.js`.
 Each login will use about $0.01 so you don't need much.
 
 ### Target.com
@@ -34,8 +34,8 @@ This gives you **permanent 5%** (plus another 5% on your birthday) off. I recomm
 
 ### 2. Credentials
 
-1. copy `config.example.json` to `config.json`
-2. edit `config.json` with your login emails and passwords
+1. copy `config.example.js` to `config.js`
+2. edit `config.js` with your login emails and passwords
    1. Remove any site you don't want to use
 
 ### 3. Run

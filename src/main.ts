@@ -1,105 +1,128 @@
+import fs from 'fs';
 import { exit } from 'process';
-import { Page } from 'puppeteer';
+import { Puppeteer } from 'puppeteer';
 import puppeteer from 'puppeteer-extra';
-import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-import RecaptchaPlugin from 'puppeteer-extra-plugin-recaptcha';
-
-import unorderedSites from './sites';
-import untypedConfig from '../config.json';
+import Site from './models/site.model';
+import Logger from './logger';
+import getSites from './sites';
 import { waitFor } from './utils';
-import { Site } from './common/Site';
-if (!untypedConfig) {
-  console.error('No config.json found!');
+
+// Puppeteer plugins
+import RecaptchaPlugin from 'puppeteer-extra-plugin-recaptcha';
+// import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+
+import Singletons from './models/singletons.model';
+
+const { QueryHandler } = require('query-selector-shadow-dom/plugins/puppeteer');
+Puppeteer.registerCustomQueryHandler('shadow', QueryHandler);
+
+// Import user configs
+const config: Config = require('../config.js');
+if (!config) {
+  console.error('No config.js found!');
   exit(1);
 }
-interface Config {
-  '2captcha'?: {
-    token: string;
-  };
-  sites: {
-    [key: string]: SiteOptions;
-  };
-}
+const captchaToken = config?.['2captcha']?.token;
+const sites: Site[] = getSites(config);
 
-export interface SiteOptions {
-  order?: number;
-  accounts: {
-    email: string;
-    password: string;
-  }[];
-}
+const BROWSER_DATA_DIR = config?.browserDataDir || 'browser-cache';
+const LOG_DIR = config?.logger?.logDir;
+const logger = new Logger(LOG_DIR, config?.logger?.logLevel);
 
-const config: Config = untypedConfig;
-const sites: Site[] = getOrderedSites(unorderedSites);
-const token = config?.['2captcha']?.token;
-
-function getOrderedSites(sites: Site[]) {
-  let orderedSites = sites.sort((a, b) => {
-    const aOrder = config.sites[a.name]?.order || 999;
-    const bOrder = config.sites[b.name]?.order || 999;
-    return aOrder - bOrder;
-  });
-  return orderedSites;
-}
-
-async function runSite(page: Page, site: any) {
-  if (!config.sites[site.name]?.accounts?.length) {
-    console.error(`${site.name} not added to config.json!`);
-    console.log('Moving to next site...');
+async function runSite(singletons: Singletons, site: Site) {
+  const siteName = site.name;
+  logger.setCurrentSite(siteName);
+  const currentSiteConfig = config.sites[siteName.toLowerCase()];
+  const requiresCaptcha = site?.requiresCaptcha;
+  if (requiresCaptcha && !captchaToken) {
+    logger.error(
+      `2captcha token required for this site but one wasn't configured! -- Get one here: https://2captcha.com/?from=17648232`,
+    );
     return;
   }
 
-  console.log(`\n\n*****START: ${site.name.toUpperCase()}*******`);
-  for (let i = 0; i < config.sites[site.name].accounts.length; i++) {
-    const account = config.sites[site.name].accounts[i];
-    await site.run(page, account.email, account.password);
+  const { accounts } = currentSiteConfig;
+
+  logger.info(`*******START*******`);
+  for (let i = 0; i < accounts.length; i++) {
+    logger.info(`Account ${i + 1} of ${accounts.length}: ${accounts[i].email}`);
+    const account = accounts[i];
+    const shouldLogout = accounts.length > 1;
+    const couponsClicked = await site.run(singletons, account, shouldLogout);
+    logger.info(`Clipped ${couponsClicked} coupons for ${accounts[i].email}`);
     await waitFor(5000);
   }
-  console.log(`\n*****END: ${site.name.toUpperCase()}*******`);
+  logger.info(`*******END*******\n\n`);
 }
 
 async function main() {
-  puppeteer.use(StealthPlugin());
-
-  if (token) {
+  if (captchaToken) {
     puppeteer.use(
       RecaptchaPlugin({
         provider: {
           id: '2captcha',
-          token,
+          token: captchaToken,
         },
         visualFeedback: true,
       }),
     );
   }
 
-  puppeteer
+  fs.rmSync(`${BROWSER_DATA_DIR}/SingletonLock`, {
+    recursive: true,
+    force: true,
+  });
+  const browser = await puppeteer
+    // .use(StealthPlugin())
     .launch({
-      headless: false,
+      headless: 'new',
+      userDataDir: BROWSER_DATA_DIR,
+      defaultViewport: null,
+      ignoreHTTPSErrors: true,
+      slowMo: 80,
+
       args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--start-maximized',
+
         '--disable-features=IsolateOrigins,site-per-process,SitePerProcess',
         '--flag-switches-begin --disable-site-isolation-trials --flag-switches-end',
+        '--disable-blink-features=AutomationControlled',
       ],
-    })
-    .then(async (browser) => {
-      const page = await browser.newPage();
-      await page.setJavaScriptEnabled(true);
-      await page.setRequestInterception(true);
-      page.on('request', async (request) => {
-        if (request.resourceType() == 'image') {
-          await request.abort();
-        } else {
-          await request.continue();
-        }
-      });
-      for (let i = 0; i < sites.length; i++) {
-        await runSite(page, sites[i]);
-      }
-      await browser.close();
-    })
-    .catch((err) => {
-      console.error(err);
     });
+
+  try {
+    const page = await browser.newPage();
+    const customUA =
+      config.userAgent ||
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36';
+    await page.setUserAgent(customUA);
+    await page.setExtraHTTPHeaders({
+      'Accept-Language': 'en-US',
+      'Accept-Encoding': 'deflate, gzip;q=1.0, *;q=0.5',
+      DNT: '1',
+    });
+    const singletons: Singletons = { page, logger };
+
+    // Navigate to the page that will perform the tests.
+    await page.goto('https://bot.sannysoft.com', {
+      timeout: 15 * 1000,
+      waitUntil: ['domcontentloaded', 'networkidle2'],
+    });
+    await logger.screenshot(page, 'stealth test page');
+
+    for (let i = 0; i < sites.length; i++) {
+      if (!sites[i].disabled) {
+        await runSite(singletons, sites[i]);
+      }
+    }
+    await browser.close();
+  } catch (err) {
+    logger.error(`${err}`);
+    browser?.close();
+  }
 }
 
 main();

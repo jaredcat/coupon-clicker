@@ -1,4 +1,5 @@
 import { ElementHandle, HTTPResponse, Page } from 'puppeteer';
+import Singletons from './models/singletons.model';
 
 export async function waitFor(milliseconds: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -53,8 +54,7 @@ export async function clickOnXPath(
     try {
       xpathButton = await page.waitForXPath(xpath, { timeout });
     } catch (err) {
-      console.error(`Button not found XPath:  ${xpath}`, err);
-      return [false, new Error('XPath Button not found')];
+      return [false, new Error(`XPath Button not found:  ${xpath}`)];
     }
   }
 
@@ -67,13 +67,15 @@ export async function clickOnXPath(
 }
 
 export async function solveCaptcha(
-  page: Page,
+  singletons: Singletons,
   checkSelector: string,
 ): Promise<boolean> {
+  const { page, logger } = singletons;
   const securityCheck = await page.$(checkSelector);
   if (securityCheck) {
     let captchas = 0;
     let solved = 0;
+    await logger.screenshot(page, 'captcha detected! attempting to solve...');
     for (const frame of page.mainFrame().childFrames()) {
       // Attempt to solve any potential captchas in those frames
       const results = await frame.solveRecaptchas();
@@ -81,6 +83,7 @@ export async function solveCaptcha(
       solved += results.solved.length;
     }
     if (solved === captchas) {
+      await logger.screenshot(page, 'done with captchas');
       page.waitForNavigation();
       return true;
     } else {
