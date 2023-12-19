@@ -1,11 +1,6 @@
 import fs from 'fs';
 import { Page } from 'puppeteer';
-import winston, {
-  format,
-  child,
-  createLogger,
-  LeveledLogMethod,
-} from 'winston';
+import winston, { format, createLogger, LeveledLogMethod } from 'winston';
 //@ts-expect-error Winston doesn't export the Logger class but it's easy to reach for it. See https://github.com/winstonjs/winston/issues/2170
 import HiddenLogger from 'winston/lib/winston/logger';
 
@@ -46,7 +41,7 @@ class Logger extends (HiddenLogger as typeof winston.Logger) {
   verbose!: LeveledLogMethod;
   debug!: LeveledLogMethod;
   silly!: LeveledLogMethod;
-  child!: typeof child;
+  child!: (options: Object) => this;
 
   constructor(logDir = './logs', logLevel: string | undefined) {
     let level = logLevel;

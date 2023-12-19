@@ -1,4 +1,6 @@
+import fs from 'fs';
 import { exit } from 'process';
+import { Puppeteer } from 'puppeteer';
 import puppeteer from 'puppeteer-extra';
 import Site from './models/site.model';
 import Logger from './logger';
@@ -11,6 +13,9 @@ import RecaptchaPlugin from 'puppeteer-extra-plugin-recaptcha';
 
 import Singletons from './models/singletons.model';
 
+const { QueryHandler } = require('query-selector-shadow-dom/plugins/puppeteer');
+Puppeteer.registerCustomQueryHandler('shadow', QueryHandler);
+
 // Import user configs
 const config: Config = require('../config.js');
 if (!config) {
@@ -20,6 +25,7 @@ if (!config) {
 const captchaToken = config?.['2captcha']?.token;
 const sites: Site[] = getSites(config);
 
+const BROWSER_DATA_DIR = config?.browserDataDir || 'browser-cache';
 const LOG_DIR = config?.logger?.logDir;
 const logger = new Logger(LOG_DIR, config?.logger?.logLevel);
 
@@ -62,12 +68,15 @@ async function main() {
     );
   }
 
-  const browserCacheDir = 'browser-cache';
+  fs.rmSync(`${BROWSER_DATA_DIR}/SingletonLock`, {
+    recursive: true,
+    force: true,
+  });
   const browser = await puppeteer
     // .use(StealthPlugin())
     .launch({
       headless: 'new',
-      userDataDir: browserCacheDir,
+      userDataDir: BROWSER_DATA_DIR,
       defaultViewport: null,
       ignoreHTTPSErrors: true,
       slowMo: 80,
@@ -86,8 +95,10 @@ async function main() {
 
   try {
     const page = await browser.newPage();
-    const client = await page.target().createCDPSession();
-    await client.send('Network.clearBrowserCache');
+    const customUA =
+      config.userAgent ||
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36';
+    await page.setUserAgent(customUA);
     await page.setExtraHTTPHeaders({
       'Accept-Language': 'en-US',
       'Accept-Encoding': 'deflate, gzip;q=1.0, *;q=0.5',
@@ -103,7 +114,9 @@ async function main() {
     await logger.screenshot(page, 'stealth test page');
 
     for (let i = 0; i < sites.length; i++) {
-      await runSite(singletons, sites[i]);
+      if (!sites[i].disabled) {
+        await runSite(singletons, sites[i]);
+      }
     }
     await browser.close();
   } catch (err) {

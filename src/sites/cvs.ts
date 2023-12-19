@@ -1,8 +1,13 @@
-import Site, { assertValidAccount } from '../models/site.model';
+import prompts from 'prompts';
+import Site, {
+  assertValidAccount,
+  clearSessionStorage,
+} from '../models/site.model';
 import { clickNavButton, clickOnSelector, clickOnXPath } from '../utils';
 import Singletons from '../models/singletons.model';
 
 const name = 'CVS';
+const homeUrl = 'https://www.cvs.com/';
 const loginUrl =
   'https://www.cvs.com/account/login?icid=cvsheader:signin&screenname=/';
 const couponsPage = 'https://www.cvs.com/extracare/home/';
@@ -10,12 +15,15 @@ const couponsPage = 'https://www.cvs.com/extracare/home/';
 const loginButtonXPath = "//div[text()='Sign in']";
 const couponButtonXPath = "//button[contains(., 'Clip Coupon')]";
 const loadMoreButtonSelector = 'button.load-more';
+const accountButtonXPath = '//span[@class="account-subheading"]';
+const logoutLinkXPath = "//a[contains(., Sign out')]";
 
 const cvs: Site = {
   name,
   run,
   clipCoupons,
   login,
+  disabled: true, // This is still WIP
 };
 
 async function run(
@@ -27,7 +35,11 @@ async function run(
   const ok = await login(singletons, account);
   if (!ok) return 0;
   const couponsClicked = await clipCoupons(singletons);
-  // await logout(page);
+
+  // TODO: add logout function for multiple accounts
+  if (shouldLogout) {
+    // await logout(page);
+  }
 
   return couponsClicked;
 }
@@ -77,15 +89,19 @@ async function login(
 ): Promise<boolean> {
   const { page, logger } = singletons;
   const { email, password } = account;
+
+  const isLoggedIn = await _checkedIfLoggedIn(singletons);
+  if (isLoggedIn) return true;
+
   await page.goto(loginUrl, {
     timeout: 15 * 1000,
     waitUntil: ['domcontentloaded', 'networkidle2'],
   });
-
-  let ok = true;
-  if (!ok) return false;
+  await clearSessionStorage(page);
 
   await logger.screenshot(page);
+
+  // if (await _checkedIfLoggedIn(page)) return true;
 
   await page.waitForSelector('#emailField');
   await page.type('#emailField', email);
@@ -101,10 +117,52 @@ async function login(
   if (loginButton) {
     await clickNavButton(page, loginButton);
   }
+  const ok = await _confirmItsYou(singletons);
+  if (!ok) return false;
 
   await logger.screenshot(page);
-  ok = true;
   return ok;
+}
+
+async function _confirmItsYou(singletons: Singletons): Promise<boolean> {
+  const { page, logger } = singletons;
+  const buttons = await page.$$('button');
+  for (let button of buttons) {
+    const text = await page.evaluate((el) => el.textContent, button);
+    console.log(button, text);
+    if (text?.toLowerCase() === 'send code') {
+      await clickOnSelector(page, button);
+      await logger.screenshot(page, 'clicked on send code button');
+      const response = await prompts({
+        type: 'text',
+        name: 'code',
+        message: 'Enter OTA code:',
+      });
+
+      if (!response.code) return false;
+
+      await page.waitForSelector('#forget-password-otp-input');
+      await page.type('#forget-password-otp-input', response.code);
+      await clickOnSelector(page, 'button');
+      return true;
+    }
+  }
+  return true;
+}
+
+async function _checkedIfLoggedIn(singletons: Singletons): Promise<boolean> {
+  const { page, logger } = singletons;
+  await page.goto(homeUrl, {
+    timeout: 15 * 1000,
+    waitUntil: ['domcontentloaded', 'networkidle2'],
+  });
+
+  await logger.screenshot(page, 'checking if user is already logged in');
+  const [accountButton] = await page.$x(accountButtonXPath);
+  console.log({ accountButton });
+  if (accountButton) return true;
+
+  return false;
 }
 
 export default cvs;

@@ -1,7 +1,10 @@
 import { clickNavButton, clickOnSelector, solveCaptcha } from '../utils';
-import Site, { assertValidAccount } from '../models/site.model';
+import Site, {
+  assertValidAccount,
+  clearSessionStorage,
+} from '../models/site.model';
 import Singletons from '../models/singletons.model';
-import { ElementHandle } from 'puppeteer';
+import { ElementHandle, Page } from 'puppeteer';
 
 const name = 'Vons';
 const requiresCaptcha = true;
@@ -33,7 +36,9 @@ async function run(
   const couponsClicked = await clipCoupons(singletons);
 
   // TODO: add logout function for multiple accounts
-  // await logout(page);
+  if (shouldLogout) {
+    // await logout(page);
+  }
 
   return couponsClicked;
 }
@@ -98,7 +103,10 @@ async function login(
     timeout: 15 * 1000,
     waitUntil: ['domcontentloaded', 'networkidle2'],
   });
+  await clearSessionStorage(page);
   await logger.screenshot(page, 'login page loaded');
+
+  if (await _checkedIfLoggedIn(page)) return true;
 
   let ok = solveCaptcha(singletons, 'body > iframe');
   if (!ok) return false;
@@ -118,6 +126,19 @@ async function login(
 
   ok = solveCaptcha(singletons, 'body > iframe');
   return ok;
+}
+
+// When a user is logged in, the `title` attribute on the profile button is empty
+async function _checkedIfLoggedIn(page: Page): Promise<boolean> {
+  const accountButton = (await page.$$('.menu-nav__profile-button'))[0];
+  if (!accountButton) return false;
+
+  const accountButtonTitle = await page.evaluate(
+    (el) => el.getAttribute('title'),
+    accountButton,
+  );
+  const isLoggedIn = !accountButtonTitle;
+  return isLoggedIn;
 }
 
 export default vons;

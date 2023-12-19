@@ -1,5 +1,8 @@
 import { clickNavButton, clickOnXPath, waitFor } from '../utils';
-import Site, { assertValidAccount } from '../models/site.model';
+import Site, {
+  assertValidAccount,
+  clearSessionStorage,
+} from '../models/site.model';
 import Singletons from '../models/singletons.model';
 
 const name = 'Target';
@@ -86,7 +89,7 @@ async function login(singletons: Singletons, account: Account) {
     timeout: 15 * 1000,
     waitUntil: ['domcontentloaded', 'networkidle2'],
   });
-
+  await clearSessionStorage(page);
   await logger.screenshot(page);
   await page.waitForSelector('input[name=password]');
 
