@@ -85,11 +85,11 @@ async function clipCoupons(singletons: Singletons): Promise<number> {
 async function login(singletons: Singletons, account: Account) {
   const { page, logger } = singletons;
   const { email, password } = account;
+  await clearSessionStorage(page);
   await page.goto(loginUrl, {
     timeout: 15 * 1000,
     waitUntil: ['domcontentloaded', 'networkidle2'],
   });
-  await clearSessionStorage(page);
   await logger.screenshot(page);
   await page.waitForSelector('input[name=password]');
 
