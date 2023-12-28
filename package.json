@@ -7,7 +7,7 @@
     "start": "cross-env NODE_ENV=production ts-node --files src/main.ts",
     "debug": "cross-env NODE_ENV=development ts-node --files src/main.ts",
     "debug:browser": "cross-env NODE_ENV=development HEADLESS=false ts-node --files src/main.ts",
-    "lint": "tsc --skipLibCheck --noEmit && prettier --check .",
+    "lint": "tsc --skipLibCheck --noEmit && prettier --single-quote --w .",
     "postinstall": "node scripts/install.js"
   },
   "git": "https://github.com/jaredkotoff/coupon-clicker.git",

@@ -11,8 +11,8 @@ issuehunt: # Replace with a single IssueHunt username
 otechie: # Replace with a single Otechie username
 custom:
   [
-    "https://www.twitch.tv/subs/updownleftdie",
-    "https://cash.app/$UpDownLeftDie/FPBDPCH",
-    "https://www.paypal.me/jaredkotoff",
-    "https://1upcoin.com/donate/updownleftdie",
+    'https://www.twitch.tv/subs/updownleftdie',
+    'https://cash.app/$UpDownLeftDie/FPBDPCH',
+    'https://www.paypal.me/jaredkotoff',
+    'https://1upcoin.com/donate/updownleftdie',
   ]
