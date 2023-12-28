@@ -13,10 +13,11 @@ import { ElementHandle, Page } from 'puppeteer';
 
 const name = 'Vons';
 const requiresCaptcha = true;
-const loginUrl = 'https://www.vons.com/account/sign-in.html';
+const loginUrl = 'https://www.vons.com/account/re-sign-in.html';
 const couponsPage = 'https://www.vons.com/foru/coupons-deals.html';
 
 const loginButtonSelector = '.auth-styles__btn';
+const couponItemSelector = 'coupon-item';
 const couponButtonSelector = '.grid-coupon-btn';
 const loadMoreButtonSelector = 'button.load-more';
 
@@ -26,7 +27,6 @@ const vons: Site = {
   run,
   clipCoupons,
   login,
-  // logout,
 };
 
 async function run(
@@ -35,15 +35,14 @@ async function run(
   shouldLogout = false,
 ): Promise<number> {
   assertValidAccount(account, name);
-
   const ok = await login(singletons, account);
   if (!ok) return 0;
   const couponsClicked = await clipCoupons(singletons);
 
   // TODO: add logout function for multiple accounts
-  if (shouldLogout) {
-    // await logout(page);
-  }
+  // if (shouldLogout) {
+  //   await logout(singletons);
+  // }
 
   return couponsClicked;
 }
@@ -52,7 +51,7 @@ async function clipCoupons(singletons: Singletons): Promise<number> {
   const { page, logger } = singletons;
   await page.goto(couponsPage, {
     timeout: 15 * 1000,
-    waitUntil: ['domcontentloaded', 'networkidle2'],
+    waitUntil: ['load', 'domcontentloaded', 'networkidle0'],
   });
   await logger.screenshot(page, 'coupons page loaded');
 
@@ -89,10 +88,11 @@ async function clickCouponBatch(singletons: Singletons): Promise<number> {
     if (couponButtons?.length) {
       logger.info(`clicking coupons: ${couponButtons?.length} remaining...`);
       // We have to get each coupon one at a time because of shadow DOM
-      await clickOnSelector(page, couponButtons[couponButtons.length - 1], {
+      await clickOnSelector(page, couponButtons[0], {
         waitAfterFor: 2500,
       });
       couponsClicked++;
+      await logger.screenshot(page, 'clicked coupon');
     }
   } while (couponButtons?.length);
 
@@ -106,14 +106,18 @@ async function login(
 ): Promise<boolean> {
   const { page, logger } = singletons;
   const { email, password } = account;
+  await clearSessionStorage(page);
+
   await page.goto(loginUrl, {
     timeout: 15 * 1000,
-    waitUntil: ['domcontentloaded', 'networkidle2'],
+    waitUntil: ['domcontentloaded', 'networkidle0'],
   });
-  await clearSessionStorage(page);
-  await logger.screenshot(page, 'login page loaded');
 
-  if (await _checkedIfLoggedIn(page)) return true;
+  // await page.waitForNavigation({
+  //   waitUntil: ['domcontentloaded', 'networkidle0'],
+  // });
+
+  await logger.screenshot(page, 'login page loaded');
 
   let ok = await solveCaptcha(singletons, 'body > iframe');
   if (!ok) return false;
@@ -153,7 +157,11 @@ async function login(
 }
 
 // When a user is logged in, the `title` attribute on the profile button is empty
-async function _checkedIfLoggedIn(page: Page): Promise<boolean> {
+async function _checkedIfLoggedIn(singletons: Singletons): Promise<boolean> {
+  const { page } = singletons;
+  await page.waitForNavigation({
+    waitUntil: 'networkidle0',
+  });
   const accountButton = (await page.$$('.menu-nav__profile-button'))[0];
   if (!accountButton) return false;
 
@@ -164,5 +172,4 @@ async function _checkedIfLoggedIn(page: Page): Promise<boolean> {
   const isLoggedIn = !accountButtonTitle;
   return isLoggedIn;
 }
-
 export default vons;

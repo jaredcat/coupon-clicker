@@ -12,6 +12,8 @@ import RecaptchaPlugin from 'puppeteer-extra-plugin-recaptcha';
 
 import Singletons from './models/singletons.model';
 
+const isDev = process.env.NODE_ENV?.toLocaleLowerCase() === 'development';
+const isHeadless = process.env.HEADLESS?.toLocaleLowerCase() !== 'false';
 const { QueryHandler } = require('query-selector-shadow-dom/plugins/puppeteer');
 Puppeteer.registerCustomQueryHandler('shadow', QueryHandler);
 
@@ -74,7 +76,7 @@ async function main() {
   const browser = await puppeteer
     // .use(StealthPlugin())
     .launch({
-      headless: 'new',
+      headless: isHeadless ? 'new' : false,
       userDataDir: BROWSER_DATA_DIR,
       defaultViewport: null,
       ignoreHTTPSErrors: true,
@@ -85,7 +87,6 @@ async function main() {
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--start-maximized',
-
         '--disable-features=IsolateOrigins,site-per-process,SitePerProcess',
         '--flag-switches-begin --disable-site-isolation-trials --flag-switches-end',
         '--disable-blink-features=AutomationControlled',
@@ -105,12 +106,14 @@ async function main() {
     });
     const singletons: Singletons = { page, logger };
 
-    // Navigate to the page that will perform the tests.
-    await page.goto('https://bot.sannysoft.com', {
-      timeout: 15 * 1000,
-      waitUntil: ['domcontentloaded', 'networkidle2'],
-    });
-    await logger.screenshot(page, 'stealth test page');
+    if (isHeadless && isDev) {
+      // Navigate to the page that will perform the tests.
+      await page.goto('https://bot.sannysoft.com', {
+        timeout: 15 * 1000,
+        waitUntil: ['domcontentloaded', 'networkidle2'],
+      });
+      await logger.screenshot(page, 'stealth test page');
+    }
 
     for (let i = 0; i < sites.length; i++) {
       const site = sites[i];

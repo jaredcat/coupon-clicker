@@ -77,17 +77,17 @@ async function login(
 ): Promise<boolean> {
   const { page, logger } = singletons;
   const { email, password } = account;
+  await clearSessionStorage(page);
 
   await page.goto(loginUrl, {
     timeout: 15 * 1000,
     waitUntil: ['domcontentloaded', 'networkidle2'],
   });
-  await clearSessionStorage(page);
 
+  await clickOnXPath(page, cookiesButton, { timeout: 2000 });
   await logger.screenshot(page, 'Looking for login');
   await page.waitForSelector('input[name=email]');
-
-  await clickOnXPath(page, cookiesButton, { timeout: 100 });
+  await page.waitForSelector('input[name=email]');
 
   await page.type('input[name=email]', email);
   await page.type('input[name=password]', password);
