@@ -1,9 +1,9 @@
-import { clickNavButton, clickOnXPath } from '../utils';
+import { clickNavButton, clickOnXPath } from '../../utils';
 import Site, {
   assertValidAccount,
   clearSessionStorage,
-} from '../models/site.model';
-import Singletons from '../models/singletons.model';
+} from '../../models/site.model';
+import Singletons from '../../models/singletons.model';
 
 const name = 'Honeygain';
 const loginUrl = 'https://dashboard.honeygain.com/login';

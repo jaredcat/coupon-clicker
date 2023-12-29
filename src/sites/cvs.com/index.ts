@@ -2,9 +2,9 @@ import prompts from 'prompts';
 import Site, {
   assertValidAccount,
   clearSessionStorage,
-} from '../models/site.model';
-import { clickNavButton, clickOnSelector, clickOnXPath } from '../utils';
-import Singletons from '../models/singletons.model';
+} from '../../models/site.model';
+import { clickNavButton, clickOnSelector, clickOnXPath } from '../../utils';
+import Singletons from '../../models/singletons.model';
 
 const name = 'CVS';
 const homeUrl = 'https://www.cvs.com/';

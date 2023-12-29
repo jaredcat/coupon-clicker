@@ -1,9 +1,9 @@
-import { clickNavButton, clickOnXPath, waitFor } from '../utils';
+import { clickNavButton, clickOnXPath, waitFor } from '../../utils';
 import Site, {
   assertValidAccount,
   clearSessionStorage,
-} from '../models/site.model';
-import Singletons from '../models/singletons.model';
+} from '../../models/site.model';
+import Singletons from '../../models/singletons.model';
 
 const name = 'Target';
 const loginUrl = 'https://www.target.com/account';

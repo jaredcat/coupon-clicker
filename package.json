@@ -1,13 +1,14 @@
 {
   "name": "coupon-clicker",
-  "version": "1.2.1",
-  "description": "Clicks all coupons for Target.com and Vons.com",
+  "version": "1.3.0",
+  "description": "Clicks all coupons for Target.com, Vons.com, and more!",
   "main": "index.js",
   "scripts": {
     "start": "cross-env NODE_ENV=production ts-node --files src/main.ts",
     "debug": "cross-env NODE_ENV=development ts-node --files src/main.ts",
     "debug:browser": "cross-env NODE_ENV=development HEADLESS=false ts-node --files src/main.ts",
-    "lint": "tsc --skipLibCheck --noEmit && prettier --single-quote --w .",
+    "lint": "tsc --skipLibCheck --noEmit && prettier --check .",
+    "lint:fix": "tsc --skipLibCheck --noEmit && prettier -w .",
     "postinstall": "node scripts/install.js"
   },
   "git": "https://github.com/jaredkotoff/coupon-clicker.git",

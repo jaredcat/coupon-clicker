@@ -3,12 +3,12 @@ import {
   clickOnSelector,
   clickOnXPath,
   solveCaptcha,
-} from '../utils';
+} from '../../utils';
 import Site, {
   assertValidAccount,
   clearSessionStorage,
-} from '../models/site.model';
-import Singletons from '../models/singletons.model';
+} from '../../models/site.model';
+import Singletons from '../../models/singletons.model';
 import { ElementHandle, Page } from 'puppeteer';
 
 const name = 'Vons';

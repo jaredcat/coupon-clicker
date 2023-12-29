@@ -1,0 +1,5 @@
+.prettierrc.json
+package.json
+tsconfig.json
+.github/
+.vscode/

@@ -9,10 +9,11 @@ config.js
 src/sites/*
 !src/sites/site.ts
 !src/sites/index.ts
-!src/sites/target.ts
-!src/sites/vons.ts
-!src/sites/cvs.ts
-!src/sites/honeygain.ts
+!src/sites/cvs.com/
+!src/sites/honeygain.com/
+!src/sites/swagbucks.com/
+!src/sites/target.com/
+!src/sites/vons.com/
 
 debug.log
 .DS_Store
